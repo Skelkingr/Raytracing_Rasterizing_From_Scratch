@@ -1,12 +1,6 @@
-#include <stdio.h>
-#include <Windows.h>
+#include "Util.h"
 
 #pragma comment(lib, "user32.lib")
-
-const wchar_t CLASS_NAME[] = L"SAMPLE RAYTRACING";
-
-const unsigned int WINDOW_SIZE_X = 600;
-const unsigned int WINDOW_SIZE_Y = 600;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -57,11 +51,13 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    PAINTSTRUCT ps;
     static RECT rcClient;
 
-    HBRUSH hBrush = CreateSolidBrush(RGB(255, 0, 0));
-    HPEN hPen = CreatePen(PS_NULL, 0, NULL);
+    Sphere redSphere = {
+        {rcClient.right / 2, rcClient.bottom / 2},
+        1,
+        {255, 0, 0}
+    };
 
     switch (msg)
     {
@@ -69,17 +65,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
     case WM_PAINT:
-        BeginPaint(hwnd, &ps);
-        SelectObject(ps.hdc, hBrush);
-        SelectObject(ps.hdc, hPen);
-        Ellipse(
-            ps.hdc,
-            10,
-            10,
-            rcClient.right - 10,
-            rcClient.bottom - 10
-        );
-        EndPaint(hwnd, &ps);
+        DrawSphere(hwnd, rcClient, redSphere);
         break;
     case WM_SIZE:
         GetClientRect(hwnd, &rcClient);
