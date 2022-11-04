@@ -51,13 +51,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    static RECT rcClient;
-
-    Sphere redSphere = {
-        {rcClient.right / 2, rcClient.bottom / 2},
-        1,
-        {255, 0, 0}
-    };
+    static RECT rcCanvas;
 
     switch (msg)
     {
@@ -65,10 +59,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
     case WM_PAINT:
-        DrawSphere(hwnd, rcClient, redSphere);
         break;
     case WM_SIZE:
-        GetClientRect(hwnd, &rcClient);
+        GetClientRect(hwnd, &rcCanvas);
         break;
     }
 
