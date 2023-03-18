@@ -1,6 +1,9 @@
 .vs/**
 **/x64/**
 
+**vcxproj**
+*.sln
+
 framework.h
 Raytracing.h
 Resource.h
