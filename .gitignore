@@ -5,3 +5,6 @@ framework.h
 Raytracing.h
 Resource.h
 targetver.h
+
+CppProperties.json
+**Debug**
