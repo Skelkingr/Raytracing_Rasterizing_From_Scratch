@@ -1,6 +1,12 @@
 #ifndef MATHHELPER_H
 #define MATHHELPER_H
 
+typedef struct Array2D
+{
+	float a;
+	float b;
+} Array2D;
+
 typedef struct Vector3D
 {
 	float x;
@@ -8,12 +14,12 @@ typedef struct Vector3D
 	float z;
 } Vector3D;
 
-float dotProduct(Vector3D u, Vector3D v)
+float DotProduct(Vector3D u, Vector3D v)
 {
 	return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
-Vector3D vectorSubstract(Vector3D v, Vector3D u)
+Vector3D VectorSubstract(Vector3D v, Vector3D u)
 {
 	Vector3D result = { .x = v.x - u.x, .y = v.y - u.y, .z = v.z - u.z };
 
