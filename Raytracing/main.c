@@ -23,26 +23,24 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
     RegisterClassW(&wc);
 
-    int posX = (GetSystemMetrics(SM_CXSCREEN) / 2) - (WINDOW_SIZE_X / 2);
-    int posY = (GetSystemMetrics(SM_CYSCREEN) / 2) - (WINDOW_SIZE_Y / 2);
+    int posX = (GetSystemMetrics(SM_CXSCREEN) / 2) - (WINDOW_WIDTH / 2);
+    int posY = (GetSystemMetrics(SM_CYSCREEN) / 2) - (WINDOW_HEIGHT / 2);
 
     hwnd = CreateWindowW(
         wc.lpszClassName,
         CLASS_NAME,
         WS_OVERLAPPED | WS_SYSMENU | WS_VISIBLE,
         posX, posY,
-        WINDOW_SIZE_X, WINDOW_SIZE_Y,
+        WINDOW_WIDTH, WINDOW_HEIGHT,
         NULL,
         NULL,
         hInstance,
         NULL
     );
 
-    ShowWindow(hwnd, showCmd);
-    UpdateWindow(hwnd);
-
     while (GetMessage(&msg, NULL, 0, 0))
     {
+        TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
@@ -51,17 +49,10 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    static RECT rcCanvas;
-
     switch (msg)
     {
     case WM_DESTROY:
         PostQuitMessage(0);
-        break;
-    case WM_PAINT:
-        break;
-    case WM_SIZE:
-        GetClientRect(hwnd, &rcCanvas);
         break;
     }
 
