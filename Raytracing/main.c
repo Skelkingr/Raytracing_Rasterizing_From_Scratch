@@ -87,7 +87,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
         {
             canvas_bitmap_info.bmiHeader.biWidth = LOWORD(lParam);
-            canvas_bitmap_info.bmiHeader.biHeight = HIWORD(lParam);
+            canvas_bitmap_info.bmiHeader.biHeight = -HIWORD(lParam);
 
             if (canvas_bitmap)
                 DeleteObject(canvas_bitmap);

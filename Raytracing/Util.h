@@ -57,7 +57,7 @@ bool SphereIsNull(Sphere sphere);
 void PutPixel(int x, int y, Color color)
 {
 	x = (canvas.width / 2) + x;
-	y = (canvas.height / 2) + y + 1;
+	y = (canvas.height / 2) - y - 1;
 
 	if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height)
 		return;
