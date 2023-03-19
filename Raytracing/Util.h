@@ -10,15 +10,13 @@
 
 #include "MathHelper.h"
 
-const wchar_t CLASS_NAME[] = L"SAMPLE RAYTRACING";
+#define PROJECTION_PLANE_D 1
 
-const unsigned int PROJECTION_PLANE_D = 1;
+#define VIEWPORT_WIDTH 1
+#define VIEWPORT_HEIGHT 1
 
-const unsigned int VIEWPORT_WIDTH = 1;
-const unsigned int VIEWPORT_HEIGHT = 1;
-
-const int WINDOW_WIDTH = 600;
-const int WINDOW_HEIGHT = 600;
+#define WINDOW_WIDTH 600
+#define WINDOW_HEIGHT 600
 
 struct {
 	int width;
@@ -48,6 +46,7 @@ const Sphere scene[3] = {
 	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0} }
 };
 
+void PutPixel(int x, int y, Color color);
 void Render();
 Vector3D CanvasToViewport(int x, int y);
 Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max);

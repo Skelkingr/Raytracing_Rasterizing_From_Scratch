@@ -18,7 +18,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
-    wc.lpszClassName = CLASS_NAME;
+    wc.lpszClassName = L"SAMPLE RAYTRACING";
     wc.hInstance = hInstance;
     wc.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
     wc.lpszMenuName = NULL;
@@ -39,7 +39,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
     hwnd = CreateWindowW(
         wc.lpszClassName,
-        CLASS_NAME,
+        L"SAMPLE RAYTRACING",
         WS_OVERLAPPED | WS_SYSMENU | WS_VISIBLE,
         posX, posY,
         WINDOW_WIDTH, WINDOW_HEIGHT,
