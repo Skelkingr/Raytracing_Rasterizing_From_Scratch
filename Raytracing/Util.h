@@ -10,14 +10,6 @@
 
 #include "MathHelper.h"
 
-#define PROJECTION_PLANE_D 1
-
-#define VIEWPORT_WIDTH 1
-#define VIEWPORT_HEIGHT 1
-
-#define WINDOW_WIDTH 600
-#define WINDOW_HEIGHT 600
-
 struct {
 	int width;
 	int height;
@@ -38,9 +30,19 @@ typedef struct Sphere
 	Color color;
 } Sphere;
 
-const Color BACKGROUND_COLOR = { 255, 255, 255 };
+#define PROJECTION_PLANE_D 1
 
-const Sphere scene[3] = {
+#define VIEWPORT_WIDTH 1
+#define VIEWPORT_HEIGHT 1
+
+#define WINDOW_WIDTH 600
+#define WINDOW_HEIGHT 600
+
+#define BACKGROUND_COLOR (Color){ 255, 255, 255 }
+
+#define SPHERES 3
+
+const Sphere scene[SPHERES] = {
 	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0} },
 	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255} },
 	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0} }
@@ -95,7 +97,7 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
 	float closest_t = FLT_MAX;
 	Sphere closestSphere = { 0 };
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < SPHERES; i++)
 	{
 		Array2D t = IntersectRaySphere(O, D, scene[i]);
 
