@@ -29,6 +29,7 @@ typedef struct Sphere
 	Vector3D center;
 	int radius;
 	Color color;
+	int specular;
 } Sphere;
 
 #define PROJECTION_PLANE_D 1
@@ -44,10 +45,10 @@ typedef struct Sphere
 #define SPHERES 4
 
 static const Sphere SCENE_S[SPHERES] = {
-	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0} },
-	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255} },
-	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0} },
-	{.center = {.x = 0.0f, .y = -5001.0f, .z = 0.0f}, .radius = 5000, .color = {.r = 255, .g = 255, .b = 0} }
+	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0}, .specular = 500},
+	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255}, .specular = 500},
+	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0}, .specular = 10},
+	{.center = {.x = 0.0f, .y = -5001.0f, .z = 0.0f}, .radius = 5000, .color = {.r = 255, .g = 255, .b = 0}, .specular = 1000}
 };
 
 static const Light SCENE_L[LIGHTS] = {
@@ -80,7 +81,7 @@ void PutPixel(int x, int y, Color color)
 
 void Render()
 {
-	Vector3D O = { 0.0f, 0.0f, 0.0f };
+	Vector3D O = { 0.0f, 0.0f, -0.15f };
 
 	for (int x = -canvas.width / 2; x < canvas.width / 2; x++)
 	{
@@ -136,9 +137,9 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
 	Color closestSphereColor = closestSphere.color;
 	float computeLighting = ComputeLighting(P, N);
 	Color resultingColor = {
-		.r = (float)closestSphereColor.r * computeLighting,
-		.g = (float)closestSphereColor.g * computeLighting,
-		.b = (float)closestSphereColor.b * computeLighting
+		.r = (int)((float)closestSphereColor.r * computeLighting),
+		.g = (int)((float)closestSphereColor.g * computeLighting),
+		.b = (int)((float)closestSphereColor.b * computeLighting)
 	};
 
 	return resultingColor;
