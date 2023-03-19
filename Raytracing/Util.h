@@ -38,6 +38,8 @@ typedef struct ClosestIntersect
 	float closest_t;
 } ClosestIntersect;
 
+#define ESPILON 0.001f
+
 #define PROJECTION_PLANE_D 1
 
 #define VIEWPORT_WIDTH 1
@@ -46,7 +48,7 @@ typedef struct ClosestIntersect
 #define CANVAS_WIDTH 600
 #define CANVAS_HEIGHT 600
 
-#define BACKGROUND_COLOR (Color){ 255, 255, 255 }
+#define BACKGROUND_COLOR (Color){ 0, 0, 0 }
 
 #define SPHERES 4
 
@@ -72,7 +74,7 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max);
 Color ClampColor(Color color);
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere);
 bool SphereIsNull(Sphere sphere);
-float ComputeLighting(Vector3D point, Vector3D normal, Vector3D view, float specular);
+float ComputeLighting(Vector3D P, Vector3D N, Vector3D V, float s);
 /* */
 
 /* Actual functions */
@@ -211,9 +213,10 @@ bool SphereIsNull(Sphere sphere)
 	return false;
 }
 
-float ComputeLighting(Vector3D point, Vector3D normal, Vector3D view, float specular)
+float ComputeLighting(Vector3D P, Vector3D N, Vector3D V, float s)
 {
 	float intensity = 0.0f;
+	float t_max;
 
 	for (int i = 0; i < LIGHTS; i++)
 	{
@@ -225,39 +228,44 @@ float ComputeLighting(Vector3D point, Vector3D normal, Vector3D view, float spec
 		}
 		else
 		{
-			Vector3D direction = { 0.0f };
-			Vector3D reflect = { 0.0f };
+			Vector3D L = { 0.0f };
+			Vector3D R = { 0.0f };
 
 			if (light.type == POINT_LIGHT)
 			{
-				direction = VectorSubstract(light.coords, point);
+				L = VectorSubstract(light.coords, P);
+				t_max = 1;
 			}
 			else
 			{
-				direction = light.coords;
+				L = light.coords;
+				t_max = FLT_MAX;
 			}
 
+			// Shadow check
+			ClosestIntersect shadow = ClosestIntersection(P, L, ESPILON, t_max);
+
+			if (!SphereIsNull(shadow.sphere))
+				continue;
+
 			// Diffuse
-			float n_dot_l = DotProduct(normal, direction);
+			float n_dot_l = DotProduct(N, L);
 
 			if (n_dot_l > 0.0f)
 			{
-				intensity += light.intensity * n_dot_l / (Length(normal) * Length(direction));
+				intensity += light.intensity * n_dot_l / (Length(N) * Length(L));
 			}
 
 			// Specular
-			if (specular != -1)
+			if (s != -1)
 			{
-				reflect = VectorSubstract(
-					ScalarMul(2.0f * n_dot_l, normal),
-					direction
-				);
+				R = VectorSubstract(ScalarMul(2.0f * n_dot_l, N), L);
 				
-				float r_dot_v = DotProduct(reflect, view);
+				float r_dot_v = DotProduct(R, V);
 
 				if (r_dot_v > 0.0f)
 				{
-					intensity += light.intensity * powf(r_dot_v / (Length(reflect) * Length(view)), specular);
+					intensity += light.intensity * powf(r_dot_v / (Length(R) * Length(V)), s);
 				}
 			}
 		}
