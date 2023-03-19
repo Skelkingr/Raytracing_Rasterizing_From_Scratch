@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <Windows.h>
 
+#include "LightHelper.h"
 #include "MathHelper.h"
 
 struct {
@@ -35,17 +36,24 @@ typedef struct Sphere
 #define VIEWPORT_WIDTH 1
 #define VIEWPORT_HEIGHT 1
 
-#define WINDOW_WIDTH 600
-#define WINDOW_HEIGHT 600
+#define CANVAS_WIDTH 600
+#define CANVAS_HEIGHT 600
 
-#define BACKGROUND_COLOR (Color){ 255, 255, 255 }
+#define BACKGROUND_COLOR (Color){ 0, 0, 0 }
 
-#define SPHERES 3
+#define SPHERES 4
 
-static const Sphere SCENE[SPHERES] = {
+static const Sphere SCENE_S[SPHERES] = {
 	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0} },
 	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255} },
-	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0} }
+	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0} },
+	{.center = {.x = 0.0f, .y = -5001.0f, .z = 0.0f}, .radius = 5000, .color = {.r = 255, .g = 255, .b = 0} }
+};
+
+static const Light SCENE_L[LIGHTS] = {
+	{.type = AMBIENT_LIGHT, .intensity = 0.2f, .coords = {.x = 0.0f, .y = 0.0f, .z = 0.0f}},
+	{.type = POINT_LIGHT, .intensity = 0.6f, .coords = {.x = 2.0f, .y = 1.0f, .z = 0.0f}},
+	{.type = DIRECTIONAL_LIGHT, .intensity = 0.2f, .coords = {.x = 1.0f, .y = 4.0f, .z = 4.0f}}
 };
 
 /* Functions prototypes */
@@ -55,6 +63,7 @@ Vector3D CanvasToViewport(int x, int y);
 Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max);
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere);
 bool SphereIsNull(Sphere sphere);
+float ComputeLighting(Vector3D point, Vector3D normal);
 /* */
 
 /* Actual functions */
@@ -87,8 +96,8 @@ void Render()
 Vector3D CanvasToViewport(int x, int y)
 {
 	Vector3D result = {
-		x * (float)VIEWPORT_WIDTH / (float)WINDOW_WIDTH,
-		y * (float)VIEWPORT_HEIGHT / (float)WINDOW_HEIGHT,
+		x * (float)VIEWPORT_WIDTH / (float)CANVAS_WIDTH,
+		y * (float)VIEWPORT_HEIGHT / (float)CANVAS_HEIGHT,
 		(float)PROJECTION_PLANE_D
 	};
 	
@@ -102,25 +111,37 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
 
 	for (int i = 0; i < SPHERES; i++)
 	{
-		Array2D t = IntersectRaySphere(O, D, SCENE[i]);
+		Array2D t = IntersectRaySphere(O, D, SCENE_S[i]);
 
 		if ((t.a <= t_max && t.a >= t_min) && t.a < closest_t)
 		{
 			closest_t = t.a;
-			closestSphere = SCENE[i];
+			closestSphere = SCENE_S[i];
 		}
 
 		if ((t.b <= t_max && t.b >= t_min) && t.b < closest_t)
 		{
 			closest_t = t.b;
-			closestSphere = SCENE[i];
+			closestSphere = SCENE_S[i];
 		}
 	}
 
 	if (SphereIsNull(closestSphere))
 		return BACKGROUND_COLOR;
 
-	return closestSphere.color;
+	Vector3D P = VectorAdd(O, ScalarMul(closest_t, D));
+	Vector3D N = VectorSubstract(P, closestSphere.center);
+	N = ScalarMul(1 / Length(N), N);
+
+	Color closestSphereColor = closestSphere.color;
+	float computeLighting = ComputeLighting(P, N);
+	Color resultingColor = {
+		.r = (float)closestSphereColor.r * computeLighting,
+		.g = (float)closestSphereColor.g * computeLighting,
+		.b = (float)closestSphereColor.b * computeLighting
+	};
+
+	return resultingColor;
 }
 
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere)
@@ -140,8 +161,8 @@ Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere)
 		return result;
 	}
 
-	float t1 = (-b + sqrt(discriminant)) / (2 * a);
-	float t2 = (-b - sqrt(discriminant)) / (2 * a);
+	float t1 = (-b + sqrtf(discriminant)) / (2 * a);
+	float t2 = (-b - sqrtf(discriminant)) / (2 * a);
 
 	Array2D result = { t1, t2 };
 	return result;
@@ -156,6 +177,43 @@ bool SphereIsNull(Sphere sphere)
 		return true;
 
 	return false;
+}
+
+float ComputeLighting(Vector3D point, Vector3D normal)
+{
+	float intensity = 0.0f;
+
+	for (int i = 0; i < LIGHTS; i++)
+	{
+		Light light = SCENE_L[i];
+
+		if (light.type == AMBIENT_LIGHT)
+		{
+			intensity += light.intensity;
+		}
+		else
+		{
+			Vector3D direction = { 0.0f };
+
+			if (light.type == POINT_LIGHT)
+			{
+				direction = VectorSubstract(light.coords, point);
+			}
+			else
+			{
+				direction = light.coords;
+			}
+
+			float n_dot_l = DotProduct(normal, direction);
+
+			if (n_dot_l > 0.0f)
+			{
+				intensity += light.intensity * n_dot_l / (Length(normal) * Length(direction));
+			}
+		}
+	}
+
+	return intensity;
 }
 /* */
 

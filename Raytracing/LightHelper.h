@@ -7,16 +7,16 @@
 
 typedef enum LightSourceType
 {
-	AMBIENT,
-	POINT,
-	DIRECTIONAL
+	AMBIENT_LIGHT,
+	POINT_LIGHT,
+	DIRECTIONAL_LIGHT
 } LightSourceType;
 
 typedef struct Light
 {
 	LightSourceType type;
 	float intensity;
-	Vector3D location;
+	Vector3D coords;
 } Light;
 
 #endif

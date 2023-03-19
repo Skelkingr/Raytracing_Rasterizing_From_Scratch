@@ -34,15 +34,15 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     canvas_bitmap_info.bmiHeader.biCompression = BI_RGB;
     canvas_device_context = CreateCompatibleDC(0);
 
-    int posX = (GetSystemMetrics(SM_CXSCREEN) / 2) - (WINDOW_WIDTH / 2);
-    int posY = (GetSystemMetrics(SM_CYSCREEN) / 2) - (WINDOW_HEIGHT / 2);
+    int posX = (GetSystemMetrics(SM_CXSCREEN) / 2) - (CANVAS_WIDTH / 2);
+    int posY = (GetSystemMetrics(SM_CYSCREEN) / 2) - (CANVAS_HEIGHT / 2);
 
     hwnd = CreateWindowW(
         wc.lpszClassName,
         L"SAMPLE RAYTRACING",
         WS_OVERLAPPED | WS_SYSMENU | WS_VISIBLE,
         posX, posY,
-        WINDOW_WIDTH, WINDOW_HEIGHT,
+        CANVAS_WIDTH, CANVAS_HEIGHT,
         NULL,
         NULL,
         hInstance,
