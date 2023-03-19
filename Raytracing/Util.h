@@ -32,6 +32,12 @@ typedef struct Sphere
 	float specular;
 } Sphere;
 
+typedef struct ClosestIntersect
+{
+	Sphere sphere;
+	float closest_t;
+} ClosestIntersect;
+
 #define PROJECTION_PLANE_D 1
 
 #define VIEWPORT_WIDTH 1
@@ -61,6 +67,7 @@ static const Light SCENE_L[LIGHTS] = {
 void PutPixel(int x, int y, Color color);
 void Render();
 Vector3D CanvasToViewport(int x, int y);
+ClosestIntersect ClosestIntersection(Vector3D O, Vector3D D, float t_min, float t_max);
 Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max);
 Color ClampColor(Color color);
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere);
@@ -106,27 +113,40 @@ Vector3D CanvasToViewport(int x, int y)
 	return result;
 }
 
-Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
+ClosestIntersect ClosestIntersection(Vector3D O, Vector3D D, float t_min, float t_max)
 {
 	float closest_t = FLT_MAX;
 	Sphere closestSphere = { 0 };
 
 	for (int i = 0; i < SPHERES; i++)
 	{
-		Array2D t = IntersectRaySphere(O, D, SCENE_S[i]);
+		Sphere sphere = SCENE_S[i];
+
+		Array2D t = IntersectRaySphere(O, D, sphere);
 
 		if ((t.a <= t_max && t.a >= t_min) && t.a < closest_t)
 		{
 			closest_t = t.a;
-			closestSphere = SCENE_S[i];
+			closestSphere = sphere;
 		}
 
 		if ((t.b <= t_max && t.b >= t_min) && t.b < closest_t)
 		{
 			closest_t = t.b;
-			closestSphere = SCENE_S[i];
+			closestSphere = sphere;
 		}
 	}
+
+	ClosestIntersect result = { closestSphere, closest_t };
+	return result;
+}
+
+Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
+{
+	ClosestIntersect closestIntersection = ClosestIntersection(O, D, t_min, t_max);
+
+	Sphere closestSphere = closestIntersection.sphere;
+	float closest_t = closestIntersection.closest_t;
 
 	if (SphereIsNull(closestSphere))
 		return BACKGROUND_COLOR;
