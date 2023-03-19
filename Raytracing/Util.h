@@ -138,9 +138,9 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
 	Color closestSphereColor = closestSphere.color;
 	float lighting = ComputeLighting(P, N, ScalarMul(-1.0f, D), closestSphere.specular);
 	Color resultingColor = {
-		.r = ((float)closestSphereColor.r * lighting),
-		.g = ((float)closestSphereColor.g * lighting),
-		.b = ((float)closestSphereColor.b * lighting)
+		.r = (int)((float)closestSphereColor.r * lighting),
+		.g = (int)((float)closestSphereColor.g * lighting),
+		.b = (int)((float)closestSphereColor.b * lighting)
 	};
 
 	return resultingColor;
