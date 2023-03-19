@@ -5,9 +5,9 @@
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-BITMAPINFO canvas_bitmap_info;
-HBITMAP canvas_bitmap;
-HDC canvas_device_context;
+static BITMAPINFO canvas_bitmap_info;
+static HBITMAP canvas_bitmap = 0;
+static HDC canvas_device_context = 0;
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR cmdLine, _In_ int showCmd)
 {
@@ -70,8 +70,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     case WM_PAINT:
         {
-            PAINTSTRUCT paint;
-            HDC device_context;
+            static PAINTSTRUCT paint;
+            static HDC device_context;
             device_context = BeginPaint(hwnd, &paint);
             BitBlt(
                 device_context,

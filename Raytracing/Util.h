@@ -42,19 +42,22 @@ typedef struct Sphere
 
 #define SPHERES 3
 
-const Sphere scene[SPHERES] = {
+static const Sphere SCENE[SPHERES] = {
 	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0} },
 	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255} },
 	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0} }
 };
 
+/* Functions prototypes */
 void PutPixel(int x, int y, Color color);
 void Render();
 Vector3D CanvasToViewport(int x, int y);
 Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max);
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere);
 bool SphereIsNull(Sphere sphere);
+/* */
 
+/* Actual functions */
 void PutPixel(int x, int y, Color color)
 {
 	x = (canvas.width / 2) + x;
@@ -99,18 +102,18 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
 
 	for (int i = 0; i < SPHERES; i++)
 	{
-		Array2D t = IntersectRaySphere(O, D, scene[i]);
+		Array2D t = IntersectRaySphere(O, D, SCENE[i]);
 
 		if ((t.a <= t_max && t.a >= t_min) && t.a < closest_t)
 		{
 			closest_t = t.a;
-			closestSphere = scene[i];
+			closestSphere = SCENE[i];
 		}
 
 		if ((t.b <= t_max && t.b >= t_min) && t.b < closest_t)
 		{
 			closest_t = t.b;
-			closestSphere = scene[i];
+			closestSphere = SCENE[i];
 		}
 	}
 
@@ -154,5 +157,6 @@ bool SphereIsNull(Sphere sphere)
 
 	return false;
 }
+/* */
 
 #endif
