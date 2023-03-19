@@ -29,7 +29,7 @@ typedef struct Sphere
 	Vector3D center;
 	int radius;
 	Color color;
-	int specular;
+	float specular;
 } Sphere;
 
 #define PROJECTION_PLANE_D 1
@@ -40,15 +40,15 @@ typedef struct Sphere
 #define CANVAS_WIDTH 600
 #define CANVAS_HEIGHT 600
 
-#define BACKGROUND_COLOR (Color){ 0, 0, 0 }
+#define BACKGROUND_COLOR (Color){ 255, 255, 255 }
 
 #define SPHERES 4
 
 static const Sphere SCENE_S[SPHERES] = {
-	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0}, .specular = 500},
-	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255}, .specular = 500},
-	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0}, .specular = 10},
-	{.center = {.x = 0.0f, .y = -5001.0f, .z = 0.0f}, .radius = 5000, .color = {.r = 255, .g = 255, .b = 0}, .specular = 1000}
+	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0}, .specular = 500.0f},
+	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255}, .specular = 500.0f},
+	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0}, .specular = 10.0f},
+	{.center = {.x = 0.0f, .y = -5001.0f, .z = 0.0f}, .radius = 5000, .color = {.r = 255, .g = 255, .b = 0}, .specular = 1000.0f}
 };
 
 static const Light SCENE_L[LIGHTS] = {
@@ -62,9 +62,10 @@ void PutPixel(int x, int y, Color color);
 void Render();
 Vector3D CanvasToViewport(int x, int y);
 Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max);
+Color ClampColor(Color color);
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere);
 bool SphereIsNull(Sphere sphere);
-float ComputeLighting(Vector3D point, Vector3D normal);
+float ComputeLighting(Vector3D point, Vector3D normal, Vector3D view, float specular);
 /* */
 
 /* Actual functions */
@@ -89,7 +90,7 @@ void Render()
 		{
 			Vector3D D = CanvasToViewport(x, y);
 			Color color = TraceRay(O, D, 1, FLT_MAX);
-			PutPixel(x, y, color);
+			PutPixel(x, y, ClampColor(color));
 		}
 	}
 }
@@ -135,14 +136,24 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max)
 	N = ScalarMul(1 / Length(N), N);
 
 	Color closestSphereColor = closestSphere.color;
-	float computeLighting = ComputeLighting(P, N);
+	float lighting = ComputeLighting(P, N, ScalarMul(-1.0f, D), closestSphere.specular);
 	Color resultingColor = {
-		.r = (int)((float)closestSphereColor.r * computeLighting),
-		.g = (int)((float)closestSphereColor.g * computeLighting),
-		.b = (int)((float)closestSphereColor.b * computeLighting)
+		.r = ((float)closestSphereColor.r * lighting),
+		.g = ((float)closestSphereColor.g * lighting),
+		.b = ((float)closestSphereColor.b * lighting)
 	};
 
 	return resultingColor;
+}
+
+Color ClampColor(Color color)
+{
+	Color result = { 0 };
+	result.r = min(255, max(0, color.r));
+	result.g = min(255, max(0, color.g));
+	result.b = min(255, max(0, color.b));
+
+	return result;
 }
 
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere)
@@ -180,7 +191,7 @@ bool SphereIsNull(Sphere sphere)
 	return false;
 }
 
-float ComputeLighting(Vector3D point, Vector3D normal)
+float ComputeLighting(Vector3D point, Vector3D normal, Vector3D view, float specular)
 {
 	float intensity = 0.0f;
 
@@ -195,6 +206,7 @@ float ComputeLighting(Vector3D point, Vector3D normal)
 		else
 		{
 			Vector3D direction = { 0.0f };
+			Vector3D reflect = { 0.0f };
 
 			if (light.type == POINT_LIGHT)
 			{
@@ -205,11 +217,28 @@ float ComputeLighting(Vector3D point, Vector3D normal)
 				direction = light.coords;
 			}
 
+			// Diffuse
 			float n_dot_l = DotProduct(normal, direction);
 
 			if (n_dot_l > 0.0f)
 			{
 				intensity += light.intensity * n_dot_l / (Length(normal) * Length(direction));
+			}
+
+			// Specular
+			if (specular != -1)
+			{
+				reflect = VectorSubstract(
+					ScalarMul(2.0f * n_dot_l, normal),
+					direction
+				);
+				
+				float r_dot_v = DotProduct(reflect, view);
+
+				if (r_dot_v > 0.0f)
+				{
+					intensity += light.intensity * powf(r_dot_v / (Length(reflect) * Length(view)), specular);
+				}
 			}
 		}
 	}
