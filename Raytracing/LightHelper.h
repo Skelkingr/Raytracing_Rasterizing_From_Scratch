@@ -15,7 +15,7 @@ typedef enum LightSourceType
 typedef struct Light
 {
 	LightSourceType type;
-	float intensity;
+	double intensity;
 	Vector3D coords;
 } Light;
 
