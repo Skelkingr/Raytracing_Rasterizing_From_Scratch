@@ -36,7 +36,7 @@ double Length(Vector3D u)
 	return sqrt(u.x * u.x + u.y * u.y + u.z * u.z);
 }
 
-Vector3D ScalarMul(float scalar, Vector3D u)
+Vector3D ScalarMul(double scalar, Vector3D u)
 {
 	return (Vector3D) { .x = scalar * u.x, .y = scalar * u.y, .z = scalar * u.z };
 }
