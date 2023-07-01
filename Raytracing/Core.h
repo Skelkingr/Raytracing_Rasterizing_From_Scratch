@@ -1,7 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <float.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -29,50 +28,51 @@ typedef struct Sphere
 	Vector3D center;
 	int radius;
 	Color color;
-	float specular;
-	float reflective;
+	double specular;
+	double reflective;
 } Sphere;
 
 typedef struct ClosestIntersect
 {
 	Sphere sphere;
-	float closest_t;
+	double closest_t;
 } ClosestIntersect;
 
 #define BACKGROUND_COLOR (Color){ 0, 0, 0 }
 #define CANVAS_WIDTH 600
 #define CANVAS_HEIGHT 600
-#define ESPILON 0.001f
+#define ESPILON 0.001
+#define INF (1 << 30)
 #define PROJECTION_PLANE_D 1
-#define RECURSION_LIMIT 0
+#define RECURSION_LIMIT 3
 #define SPHERES 4
 #define VIEWPORT_WIDTH 1
 #define VIEWPORT_HEIGHT 1
 
 static const Sphere SCENE_S[SPHERES] = {
-	{.center = {.x = 0.0f, .y = -1.0f, .z = 3.0f}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0}, .specular = 500.0f, .reflective = 0.2f},
-	{.center = {.x = 2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255}, .specular = 500.0f, .reflective = 0.3f},
-	{.center = {.x = -2.0f, .y = 0.0f, .z = 4.0f}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0}, .specular = 10.0f, .reflective = 0.4f},
-	{.center = {.x = 0.0f, .y = -5001.0f, .z = 0.0f}, .radius = 5000, .color = {.r = 255, .g = 255, .b = 0}, .specular = 1000.0f, .reflective = 0.5f}
+	{.center = {.x = 0.0, .y = -1.0, .z = 3.0}, .radius = 1, .color = {.r = 255, .g = 0, .b = 0}, .specular = 500.0, .reflective = 0.2},
+	{.center = {.x = 2.0, .y = 0.0, .z = 4.0}, .radius = 1, .color = {.r = 0, .g = 0, .b = 255}, .specular = 500.0, .reflective = 0.3},
+	{.center = {.x = -2.0, .y = 0.0, .z = 4.0}, .radius = 1, .color = {.r = 0, .g = 255, .b = 0}, .specular = 10.0, .reflective = 0.4},
+	{.center = {.x = 0.0, .y = -5001.0, .z = 0.0}, .radius = 5000, .color = {.r = 255, .g = 255, .b = 0}, .specular = 1000.0, .reflective = 0.5}
 };
 
 static const Light SCENE_L[LIGHTS] = {
-	{.type = AMBIENT_LIGHT, .intensity = 0.2f, .coords = {.x = 0.0f, .y = 0.0f, .z = 0.0f}},
-	{.type = POINT_LIGHT, .intensity = 0.6f, .coords = {.x = 2.0f, .y = 1.0f, .z = 0.0f}},
-	{.type = DIRECTIONAL_LIGHT, .intensity = 0.2f, .coords = {.x = 1.0f, .y = 4.0f, .z = 4.0f}}
+	{.type = AMBIENT_LIGHT, .intensity = 0.2, .coords = {.x = 0.0, .y = 0.0, .z = 0.0}},
+	{.type = POINT_LIGHT, .intensity = 0.6, .coords = {.x = 2.0, .y = 1.0, .z = 0.0}},
+	{.type = DIRECTIONAL_LIGHT, .intensity = 0.2, .coords = {.x = 1.0, .y = 4.0, .z = 4.0}}
 };
 
 /* Functions prototypes */
 void PutPixel(int x, int y, Color color);
 void Render();
 Vector3D CanvasToViewport(int x, int y);
-ClosestIntersect ClosestIntersection(Vector3D O, Vector3D D, float t_min, float t_max);
+ClosestIntersect ClosestIntersection(Vector3D O, Vector3D D, double t_min, double t_max);
 Vector3D ReflectRay(Vector3D R, Vector3D N);
-Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max, int recursionDepth);
+Color TraceRay(Vector3D O, Vector3D D, double t_min, double t_max, int recursionDepth);
 Color ClampColor(Color color);
 Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere);
 bool SphereIsNull(Sphere sphere);
-float ComputeLighting(Vector3D P, Vector3D N, Vector3D V, float s);
+double ComputeLighting(Vector3D P, Vector3D N, Vector3D V, double s);
 /* */
 
 /* Actual functions */
@@ -91,14 +91,14 @@ void PutPixel(int x, int y, Color color)
 
 void Render()
 {
-	Vector3D O = { 0.0f, 0.0f, -0.15f };
+	Vector3D O = { 0.0, 0.0, 0.0 };
 
 	for (int x = -canvas.width / 2; x < canvas.width / 2; x++)
 	{
 		for (int y = -canvas.height / 2; y < canvas.height / 2; y++)
 		{
 			Vector3D D = CanvasToViewport(x, y);
-			Color color = TraceRay(O, D, 1, FLT_MAX, RECURSION_LIMIT);
+			Color color = TraceRay(O, D, 1, INF, RECURSION_LIMIT);
 			PutPixel(x, y, ClampColor(color));
 		}
 	}
@@ -107,15 +107,15 @@ void Render()
 Vector3D CanvasToViewport(int x, int y)
 {
 	return (Vector3D) {
-		x * (float)VIEWPORT_WIDTH / (float)CANVAS_WIDTH,
-		y * (float)VIEWPORT_HEIGHT / (float)CANVAS_HEIGHT,
-		(float)PROJECTION_PLANE_D
+		x * ((double)VIEWPORT_WIDTH / CANVAS_WIDTH),
+		y * ((double)VIEWPORT_HEIGHT / CANVAS_HEIGHT),
+		PROJECTION_PLANE_D
 	};
 }
 
-ClosestIntersect ClosestIntersection(Vector3D O, Vector3D D, float t_min, float t_max)
+ClosestIntersect ClosestIntersection(Vector3D O, Vector3D D, double t_min, double t_max)
 {
-	float closest_t = FLT_MAX;
+	double closest_t = INF;
 	Sphere closestSphere = { 0 };
 
 	for (int i = 0; i < SPHERES; i++)
@@ -142,15 +142,15 @@ ClosestIntersect ClosestIntersection(Vector3D O, Vector3D D, float t_min, float 
 
 Vector3D ReflectRay(Vector3D R, Vector3D N)
 {
-	return VectorSubstract(ScalarMul(2.0f * DotProduct(R, N), N), R);
+	return VectorSubstract(ScalarMul(2.0 * DotProduct(R, N), N), R);
 }
 
-Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max, int recursionDepth)
+Color TraceRay(Vector3D O, Vector3D D, double t_min, double t_max, int recursionDepth)
 {
 	ClosestIntersect closestIntersection = ClosestIntersection(O, D, t_min, t_max);
 
 	Sphere closestSphere = closestIntersection.sphere;
-	float closest_t = closestIntersection.closest_t;
+	double closest_t = closestIntersection.closest_t;
 
 	if (SphereIsNull(closestSphere))
 	{
@@ -159,31 +159,31 @@ Color TraceRay(Vector3D O, Vector3D D, float t_min, float t_max, int recursionDe
 
 	Vector3D P = VectorAdd(O, ScalarMul(closest_t, D));
 	Vector3D N = VectorSubstract(P, closestSphere.center);
-	N = ScalarMul(1 / Length(N), N);
+	N = ScalarMul(1.0 / Length(N), N);
 
 	Color closestSphereColor = closestSphere.color;
-	float lighting = ComputeLighting(P, N, ScalarMul(-1.0f, D), closestSphere.specular);
+	double lighting = ComputeLighting(P, N, ScalarMul(-1.0, D), closestSphere.specular);
 	Color localColor = {
-		.r = (int)((float)closestSphereColor.r * lighting),
-		.g = (int)((float)closestSphereColor.g * lighting),
-		.b = (int)((float)closestSphereColor.b * lighting)
+		.r = (int)((double)closestSphereColor.r * lighting),
+		.g = (int)((double)closestSphereColor.g * lighting),
+		.b = (int)((double)closestSphereColor.b * lighting)
 	};
 
-	float r = closestSphere.reflective;
+	double r = closestSphere.reflective;
 
 	if (recursionDepth <= 0 || r <= 0.0f)
 	{
 		return localColor;
 	}
 
-	Vector3D R = ReflectRay(ScalarMul(-1.0f, D), N);
+	Vector3D R = ReflectRay(ScalarMul(-1.0, D), N );
 
-	Color reflectedColor = TraceRay(P, R, ESPILON, FLT_MAX, recursionDepth - 1);
+	Color reflectedColor = TraceRay(P, R, ESPILON, INF, recursionDepth - 1);
 
 	return (Color) {
-		.r = (int)((float)(localColor.r) * (1 - r) + (float)(reflectedColor.r) * r),
-		.g = (int)((float)(localColor.g) * (1 - r) + (float)(reflectedColor.g) * r),
-		.b = (int)((float)(localColor.b) * (1 - r) + (float)(reflectedColor.b) * r)
+		.r = (int)((double)(localColor.r) * (1 - r) + (double)(reflectedColor.r) * r),
+		.g = (int)((double)(localColor.g) * (1 - r) + (double)(reflectedColor.g) * r),
+		.b = (int)((double)(localColor.b) * (1 - r) + (double)(reflectedColor.b) * r)
 	};
 }
 
@@ -201,19 +201,19 @@ Array2D IntersectRaySphere(Vector3D O, Vector3D D, Sphere sphere)
 	int r = sphere.radius;
 	Vector3D CO = VectorSubstract(O, sphere.center);
 
-	float a = DotProduct(D, D);
-	float b = 2 * DotProduct(CO, D);
-	float c = DotProduct(CO, CO) - r * r;
+	double a = DotProduct(D, D);
+	double b = 2 * DotProduct(CO, D);
+	double c = DotProduct(CO, CO) - r * r;
 
-	float discriminant = b * b - 4 * a * c;
+	double discriminant = b * b - 4 * a * c;
 
 	if (discriminant < 0)
 	{
-		return (Array2D) { FLT_MAX, FLT_MAX };
+		return (Array2D) { INF, INF };
 	}
 
-	float t1 = (-b + sqrtf(discriminant)) / (2 * a);
-	float t2 = (-b - sqrtf(discriminant)) / (2 * a);
+	double t1 = (-b + sqrt(discriminant)) / (2 * a);
+	double t2 = (-b - sqrt(discriminant)) / (2 * a);
 
 	return (Array2D) { t1, t2 };
 }
@@ -229,10 +229,10 @@ bool SphereIsNull(Sphere sphere)
 	return false;
 }
 
-float ComputeLighting(Vector3D P, Vector3D N, Vector3D V, float s)
+double ComputeLighting(Vector3D P, Vector3D N, Vector3D V, double s)
 {
-	float intensity = 0.0f;
-	float t_max;
+	double intensity = 0.0f;
+	double t_max;
 
 	for (int i = 0; i < LIGHTS; i++)
 	{
@@ -255,7 +255,7 @@ float ComputeLighting(Vector3D P, Vector3D N, Vector3D V, float s)
 			else
 			{
 				L = light.coords;
-				t_max = FLT_MAX;
+				t_max = INF;
 			}
 
 			// Shadow check
@@ -267,7 +267,7 @@ float ComputeLighting(Vector3D P, Vector3D N, Vector3D V, float s)
 			}
 				
 			// Diffuse
-			float n_dot_l = DotProduct(N, L);
+			double n_dot_l = DotProduct(N, L);
 
 			if (n_dot_l > 0.0f)
 			{
@@ -279,11 +279,11 @@ float ComputeLighting(Vector3D P, Vector3D N, Vector3D V, float s)
 			{
 				R = ReflectRay(L, N);
 
-				float r_dot_v = DotProduct(R, V);
+				double r_dot_v = DotProduct(R, V);
 
 				if (r_dot_v > 0.0f)
 				{
-					intensity += light.intensity * powf(r_dot_v / (Length(R) * Length(V)), s);
+					intensity += light.intensity * pow(r_dot_v / (Length(R) * Length(V)), s);
 				}
 			}
 		}
